@@ -4,6 +4,8 @@
 
 import datetime
 import json
+import re
+import uuid
 from itertools import chain
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -224,9 +226,14 @@ class BayesianPostgres(PostgresBase):
 
         dt = datetime.datetime.utcnow()
 
+        if not isValidGUID(arguments['data'].get('user_id')):
+            user_id = None
+        else:
+            user_id = uuid.UUID(arguments['data'].get('user_id'))
+
         req = ComponentAnalysesRequests(
             request_id=arguments.get('external_request_id'),
-            user_id=arguments['data'].get('user_id'),
+            user_id=user_id,
             submit_time=str(dt),
             ecosystem=arguments['data'].get('ecosystem'),
             user_agent=arguments['data'].get('user_agent'),
@@ -265,3 +272,24 @@ class BayesianPostgres(PostgresBase):
         except SQLAlchemyError:
             PostgresBase.session.rollback()
             raise
+
+def isValidGUID(str):
+    """Get latest task result based on task name."""
+    # Regex to check valid 
+    # GUID (Globally Unique Identifier) 
+    regex = "^[{]?[0-9a-fA-F]{8}" + "-([0-9a-fA-F]{4}-)" + "{3}[0-9a-fA-F]{12}[}]?$"
+         
+    # Compile the ReGex
+    p = re.compile(regex)
+ 
+    # If the string is empty 
+    # return false
+    if (str == None):
+        return False
+ 
+    # Return if the string 
+    # matched the ReGex
+    if(re.search(p, str)):
+        return True
+    else:
+        return False
